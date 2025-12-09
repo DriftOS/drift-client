@@ -26,9 +26,11 @@ export class DriftClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+
+    if (body) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (this.apiKey) {
       headers['Authorization'] = `Bearer ${this.apiKey}`;
