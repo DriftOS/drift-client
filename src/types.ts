@@ -4,6 +4,7 @@ export interface DriftConfig {
   baseUrl: string;
   apiKey?: string;
   timeout?: number;
+  hosted?: boolean; // If true, paths won't include /api/v1 prefix (for gateway deployments)
 }
 
 export interface RouteResult {

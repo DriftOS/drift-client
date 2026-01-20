@@ -11,11 +11,14 @@ export class DriftClient {
   private baseUrl: string;
   private apiKey?: string;
   private timeout: number;
+  private hosted: boolean;
 
   constructor(config: DriftConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
     this.apiKey = config.apiKey;
     this.timeout = config.timeout ?? 10000;
+    // Auto-detect hosted mode if using api.driftos.dev, or use explicit config
+    this.hosted = config.hosted ?? this.baseUrl.includes('api.driftos.dev');
   }
 
   private async request<T>(
@@ -36,8 +39,11 @@ export class DriftClient {
       headers['Authorization'] = `Bearer ${this.apiKey}`;
     }
 
+    // Strip /api/v1 prefix for hosted deployments (gateway handles routing)
+    const fullPath = this.hosted ? path.replace('/api/v1', '') : path;
+
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
+      const response = await fetch(`${this.baseUrl}${fullPath}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
