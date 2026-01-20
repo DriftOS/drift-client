@@ -1,6 +1,6 @@
 {
   "name": "@driftos/client",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "JavaScript SDK for drift-core - conversation routing and context management",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
