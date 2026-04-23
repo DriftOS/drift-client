@@ -6,6 +6,8 @@ import type {
   Branch,
   Fact,
   FactsResult,
+  DeleteConversationResult,
+  DeleteBranchResult,
 } from './types';
 
 export class DriftClient {
@@ -124,6 +126,33 @@ export class DriftClient {
    */
   async getFacts(branchId: string): Promise<Fact[]> {
     return this.request<Fact[]>('GET', `/api/v1/facts/${branchId}`);
+  }
+
+  /**
+   * Delete a conversation and every branch, message, and fact belonging to it.
+   *
+   * Use this to implement client "Clear chat history" flows. Throws if the
+   * conversation does not exist (404) or the request is unauthorized.
+   */
+  async deleteConversation(
+    conversationId: string
+  ): Promise<DeleteConversationResult> {
+    return this.request<DeleteConversationResult>(
+      'DELETE',
+      `/api/v1/drift/conversations/${encodeURIComponent(conversationId)}`
+    );
+  }
+
+  /**
+   * Delete a branch, its descendant branches, and all of their messages and
+   * facts. Cascades through children — no re-parenting is performed. Throws
+   * if the branch does not exist (404) or belongs to a different user.
+   */
+  async deleteBranch(branchId: string): Promise<DeleteBranchResult> {
+    return this.request<DeleteBranchResult>(
+      'DELETE',
+      `/api/v1/drift/branches/${encodeURIComponent(branchId)}`
+    );
   }
 
   /**

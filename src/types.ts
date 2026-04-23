@@ -79,3 +79,14 @@ export interface FactsResult {
   facts: Fact[];
   extractedCount: number;
 }
+
+export interface DeleteConversationResult {
+  deletedBranches: number;
+  deletedMessages: number;
+  deletedFacts: number;
+}
+
+export interface DeleteBranchResult {
+  deletedMessages: number;
+  deletedFacts: number;
+}

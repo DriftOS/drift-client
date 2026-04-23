@@ -94,6 +94,41 @@ Build a ready-to-use prompt with context for LLM calls.
 
 **Legacy:** Also accepts a plain `string` for `systemPrompt` (backwards compatible)
 
+### `deleteConversation(conversationId)`
+Delete a conversation and every branch, message, and fact belonging to it.
+Use this to implement client "Clear chat history" flows. Throws on 404.
+
+```typescript
+const { deletedBranches, deletedMessages, deletedFacts } =
+  await drift.deleteConversation('conv-123');
+```
+
+**Returns:** `{ deletedBranches: number; deletedMessages: number; deletedFacts: number }`
+
+### `deleteBranch(branchId)`
+Delete a branch and every descendant branch (cascading), including their
+messages and facts. No re-parenting is performed. Throws on 404.
+
+```typescript
+const { deletedMessages, deletedFacts } = await drift.deleteBranch('branch_abc123');
+```
+
+**Returns:** `{ deletedMessages: number; deletedFacts: number }`
+
+## Pinning a message to a specific branch
+
+By default, `route()` lets the server decide which branch a message belongs to.
+If your UI lets the user manually select a branch, pass `branchMode: 'PINNED'`
+with `targetBranchId` to force the write onto that branch instead.
+
+```typescript
+await drift.route('conv-123', 'reply text', {
+  branchMode: 'PINNED',
+  targetBranchId: 'branch_abc123',
+});
+// result.pinned === true
+```
+
 ## License
 
 MIT
