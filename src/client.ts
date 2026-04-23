@@ -1,6 +1,7 @@
 import type {
   DriftConfig,
   RouteResult,
+  RouteOptions,
   Context,
   Branch,
   Fact,
@@ -63,18 +64,38 @@ export class DriftClient {
   }
 
   /**
-   * Route a message to the appropriate branch
+   * Route a message to the appropriate branch.
+   *
+   * Call with a role string for the classic auto-routing behavior, or with an options
+   * object to control branch targeting (e.g. `{ branchMode: 'PINNED', targetBranchId }`
+   * to force the message onto a user-selected branch).
    */
   async route(
     conversationId: string,
     content: string,
-    role: 'user' | 'assistant' = 'user'
+    roleOrOptions?: 'user' | 'assistant' | RouteOptions
   ): Promise<RouteResult> {
-    return this.request<RouteResult>('POST', '/api/v1/drift/route', {
+    const options: RouteOptions =
+      typeof roleOrOptions === 'string'
+        ? { role: roleOrOptions }
+        : (roleOrOptions ?? {});
+
+    const body: Record<string, unknown> = {
       conversationId,
       content,
-      role,
-    });
+      role: options.role ?? 'user',
+    };
+    if (options.branchMode) body.branchMode = options.branchMode;
+    if (options.targetBranchId) body.targetBranchId = options.targetBranchId;
+
+    const raw = await this.request<RouteResult & { metadata?: { pinned?: boolean } }>(
+      'POST',
+      '/api/v1/drift/route',
+      body
+    );
+
+    const { metadata, ...rest } = raw;
+    return metadata?.pinned ? { ...rest, pinned: true } : rest;
   }
 
   /**
