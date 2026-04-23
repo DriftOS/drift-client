@@ -65,7 +65,13 @@ export interface Fact {
   key: string;
   value: string;
   confidence: number;
-  messageId?: string;
+  /**
+   * Source message IDs that support this fact. A fact can be reinforced by
+   * multiple messages — `messageIds` is the authoritative provenance list.
+   */
+  messageIds: string[];
+  /** First entry of `messageIds`, kept for backwards compatibility. */
+  messageId?: string | null;
 }
 
 export interface BranchFacts {
