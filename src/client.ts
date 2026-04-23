@@ -1,5 +1,6 @@
 import type {
   DriftConfig,
+  DriftEngine,
   RouteResult,
   RouteOptions,
   Context,
@@ -10,6 +11,8 @@ import type {
   DeleteBranchResult,
 } from './types';
 
+const ENGINE_PREFIX_REGEX = /\/api\/v\d+\/(llm|embed)(\/|$)/;
+
 export class DriftClient {
   private baseUrl: string;
   private apiKey?: string;
@@ -17,11 +20,24 @@ export class DriftClient {
   private hosted: boolean;
 
   constructor(config: DriftConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, '');
+    let baseUrl = config.baseUrl.replace(/\/$/, '');
     this.apiKey = config.apiKey;
     this.timeout = config.timeout ?? 10000;
-    // Auto-detect hosted mode if using api.driftos.dev, or use explicit config
-    this.hosted = config.hosted ?? this.baseUrl.includes('api.driftos.dev');
+    // Auto-detect hosted mode from api.driftos.dev, or use explicit config
+    this.hosted = config.hosted ?? baseUrl.includes('api.driftos.dev');
+
+    // For hosted usage, the gateway expects /api/v1/<engine>/<resource>. If the
+    // caller passed a bare host (e.g. `https://api.driftos.dev`) without the
+    // engine segment, append it so requests route to the right backend.
+    // Callers who already included `/api/v1/llm` or `/api/v1/embed` are left
+    // alone so we don't mangle working configs.
+    if (this.hosted && !ENGINE_PREFIX_REGEX.test(baseUrl)) {
+      const engine: DriftEngine = config.engine ?? 'llm';
+      const stripped = baseUrl.replace(/\/api\/v\d+\/?$/, '');
+      baseUrl = `${stripped}/api/v1/${engine}`;
+    }
+
+    this.baseUrl = baseUrl;
   }
 
   private async request<T>(

@@ -37,14 +37,24 @@ const response = await openai.chat.completions.create({
 ```typescript
 import { DriftClient } from '@driftos/client';
 
-// Automatically detects hosted mode from URL
+// Bare host is fine — the SDK auto-composes /api/v1/<engine>/... for you.
 const drift = new DriftClient({
   baseUrl: 'https://api.driftos.dev',
-  apiKey: 'your-api-key'
+  apiKey: 'your-api-key',
+  // engine: 'llm' (default) | 'embed'
 });
 
-// Use the same API - hosted mode handles routing automatically
 const result = await drift.route('conv-123', 'I want to plan a trip to Paris');
+```
+
+Or pin to a specific engine by giving the full URL yourself — the SDK sees the
+engine segment and leaves it alone:
+
+```typescript
+const drift = new DriftClient({
+  baseUrl: 'https://api.driftos.dev/api/v1/embed',
+  apiKey: 'your-api-key',
+});
 ```
 
 ## Configuration
@@ -53,17 +63,22 @@ const result = await drift.route('conv-123', 'I want to plan a trip to Paris');
 
 ```typescript
 new DriftClient({
-  baseUrl: string;      // Required: Base URL of your driftos instance
-  apiKey?: string;      // Optional: API key for authentication
-  timeout?: number;     // Optional: Request timeout in ms (default: 10000)
-  hosted?: boolean;     // Optional: Hosted mode flag (auto-detected for api.driftos.dev)
+  baseUrl: string;                // Required: Base URL of your driftos instance
+  apiKey?: string;                // Optional: API key for authentication
+  timeout?: number;               // Optional: Request timeout in ms (default: 10000)
+  engine?: 'llm' | 'embed';       // Optional: hosted engine (default: 'llm')
+  hosted?: boolean;               // Optional: force hosted-gateway mode on/off
 })
 ```
 
-The `hosted` flag controls URL path formatting:
-- `false` (default): Paths include `/api/v1` prefix (for direct driftos-core connections)
-- `true`: Paths exclude `/api/v1` prefix (for gateway deployments)
-- Auto-detected when `baseUrl` includes `api.driftos.dev`
+**Hosted mode** (gateway at `api.driftos.dev`):
+- Auto-detected when `baseUrl` contains `api.driftos.dev`.
+- If `baseUrl` doesn't include an engine segment (`/api/v1/llm` or `/api/v1/embed`), the SDK appends `/api/v1/<engine>` automatically. Default engine is `llm`.
+- If you already include the engine segment in `baseUrl`, it's left untouched.
+
+**Self-hosted mode** (direct connection to driftos-core or driftos-embed):
+- Set `hosted: false` (or use any URL that doesn't contain `api.driftos.dev`).
+- Paths are composed as `<baseUrl>/api/v1/...` with no engine prefix.
 
 ## API
 
